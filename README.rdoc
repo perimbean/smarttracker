@@ -1,3 +1,12 @@
+= Smartmaker
+
+A simple app to track progress of smartmaker kickstarter campaign.
+
+All pull requests are of course welcome :)
+
+Licensed under AGPLv3 (see LICENCE.txt)
+
+
 == Welcome to Rails
 
 Rails is a web-application framework that includes everything needed to create
