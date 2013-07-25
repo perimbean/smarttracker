@@ -1,6 +1,13 @@
 <div class="parts">
   <h1>Smartmaker Kits</h1>
 
+  <h3> Legend </h3>
+  <ul class="unstyled" style="width: 40%">
+    <% Part::STATUSES.each do |status, desc| %>
+      <li style="background-color: <%= Part::COLORS[status] %>;"><%= desc %></li>
+    <% end %>
+  </ul>
+
   <table class="table table-hover table-compact">
     <thead>
       <tr>
@@ -16,7 +23,7 @@
           <td style="background-color: <%= kit.color %>"><%= kit.human_status %></td>
           <td>
             <% kit.db_parts.each do |part| %>
-              <span style="background-color: <%= part.color %>"><%= part.name %></span>
+              <abbr title="<%= part.human_status %>" style="background-color: <%= part.color %>"><%= part.name %></abbr>
             <% end %>
           </td>
         </tr>
