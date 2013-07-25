@@ -1,13 +1,6 @@
 <div>
   <h1>Smartmaker Kits</h1>
 
-  <h3> Legend </h3>
-  <ul class="unstyled" style="width: 40%">
-    <% Part::STATUSES.each do |status, desc| %>
-      <li style="background-color: <%= Part::COLORS[status] %>;"><%= desc %></li>
-    <% end %>
-  </ul>
-
   <table class="kits table table-hover table-compact">
     <thead>
       <tr>
@@ -31,6 +24,13 @@
     </tbody>
   </table>
   
+  <h5> Legend </h5>
+  <ul class="unstyled" style="width: 40%">
+    <% Part::STATUSES.each do |status, desc| %>
+      <li style="background-color: <%= Part::COLORS[status] %>;"><%= desc %></li>
+    <% end %>
+  </ul>
+
   <h1>Smartmaker Parts</h1>
 
   <table class="parts table table-hover table-compact">
