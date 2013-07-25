@@ -1,11 +1,7 @@
 Smartduino::Application.routes.draw do
-  get "orders/index"
+  resources :orders
 
-  get "orders/show"
-
-  get "orders/update"
-
-  get "parts/index"
+  root :to => "parts#index"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

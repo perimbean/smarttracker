@@ -13,6 +13,17 @@ class Part < ActiveRecord::Base
     "standby"     => "In standby",
   }
 
+  COLORS = {
+    "ww"          => "green",
+    "cn"          => "lime",
+    "running"     => "blue",
+    "approved"    => "cyan",
+    "prototyped"  => "yellow",
+    "designed"    => "orange",
+    "designing"   => "red",
+    "standby"     => "grey",
+  }
+
   attr_accessible :name, :sku, :status
 
   validates :status, :inclusion => STATUSES.keys
@@ -31,10 +42,8 @@ class Part < ActiveRecord::Base
       next unless sku.present?
 
       scope = Part.where({ sku: sku, name: name })
-      part = (scope.first || scope.new)
+      @parts[name] = part = (scope.first || scope.new)
       part.update_attributes!(status: status)
-
-      @parts[name] = part
     end
 
     nil
@@ -53,21 +62,28 @@ class Part < ActiveRecord::Base
 
     kits.each do |t| 
       name, rest = t.split("-", 2)
+
       name = name.strip[11..-1]
+
       kit_parts = rest.
         split(/inc?lude:/, 2).last.strip.
         split(/,\s/).
         map{|pr| pr.sub(/[,.]$/, '')}
 
-      ss_parts = []
+      # Kit part names adjustments. Kickstarter name => Spreadsheet name.
+      ss_parts = [] # Spreadshit part name
       kit_parts.each do |kit_part_name|
-        s = kit_part_name.downcase.
-          sub('extension', 'replicator').sub('2mm', '').
-          split(/\s/).reject(&:empty?).map(&:downcase)
+        kit_part_name = kit_part_name.downcase.
+          sub('extension', 'replicator').
+          sub('2mm', '')
+
+        split_kit_part_name = kit_part_name.split(/\s/).reject(&:empty?).map(&:downcase)
         
         db_part = 
-          parts.values.detect{|pt| pt.name.downcase == kit_part_name.downcase} ||
-          parts.values.detect{|pt| s.all?{|ps| pt.name.downcase.include?(ps) }}
+          # First try to directly match name.
+          parts.values.detect{|pt| pt.name.downcase == kit_part_name} ||
+          # Then try to match every word from original name to spreadsheet name.
+          parts.values.detect{|pt| split_kit_part_name.all?{|ps| pt.name.downcase.include?(ps) }}
 
         if db_part
           ss_parts << db_part.name
@@ -77,11 +93,18 @@ class Part < ActiveRecord::Base
       end
 
       scope = Kit.where({ name: name })
-      kit = scope.first || scope.new
+      @kits[name] = kit = scope.first || scope.new
       kit.update_attributes(parts: ss_parts)
-      @kits[name] = kit
     end
 
     nil
+  end
+
+  def human_status
+    STATUSES[status] || "Unknown"
+  end
+
+  def color
+    COLORS[status]
   end
 end
