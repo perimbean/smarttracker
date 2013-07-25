@@ -2,14 +2,23 @@
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
-.parts td {
-  font-weight: bold;
+.container {
   color: black;
-  border-top: 1px solid black;
-  line-height: 2;
 }
 
-.parts span, .parts abbr {
-  padding: 2px 4px;
-  white-space: nowrap;
+.parts, .kits {
+  td {
+    color: black;
+    border-top: 1px solid black;
+    line-height: 2;
+  }
+
+  span, abbr {
+    padding: 2px 4px;
+    white-space: nowrap;
+  }
+}
+
+.parts td {
+  font-weight: bold;
 }
