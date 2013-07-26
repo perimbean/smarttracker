@@ -24,80 +24,76 @@ class Part < ActiveRecord::Base
     "standby"     => "grey",
   }
 
-  attr_accessible :name, :sku, :status
+  FIELD = {
+    :sku=>0,               # SKU of the product
+    :name=>1,              # Name of the part
+    :kk1=>2,  :kk1qt=>3,   # Kits 1-8
+    :kk2=>4,  :kk2qt=>5,
+    :kk3=>6,  :kk3qt=>7,
+    :kk4=>8,  :kk4qt=>9,
+    :kk5=>10, :kk5qt=>11,
+    :kk6=>12, :kk6qt=>13,
+    :kk7=>14, :kk7qt=>15,
+    :kk8=>16, :kk8qt=>17,
+    :kits=>18,             # Number of components from kits
+    :additional=>19,       # Number of additional components from ks / website
+    :total=>20,            # Total number of ordered components
+    :to_make=>21,          # Number of comonents to make ( > total ordered)
+    :made=>22,             # Number of kits already made
+    :bal=>23,              # made - to make
+    :receptacle=>24,       # ?
+    :header=>25,           # ?
+    :total_recept=>26,     # to make * receptacle
+    :total_head=>27,       # to make * head
+    :status=>28            # textual status of the order, see STATUSES
+  }
 
   validates :status, :inclusion => STATUSES.keys
 
-  def self.parts
-    @parts ||= Part.all.inject({}){|h, part| h[part.name] = part; h}
-  end
+  attr_accessible :status, :sku, :name, :kits, :additional, :total, :to_make, :made
 
-  def self.import_parts
-    content = File.read(File.join(Rails.root, 'doc', 'TOTAL_PRODUCT_QUANTITIES.csv'))
-    @parts = {}
+  class << self
+    def import
+      content = File.read(File.join(Rails.root, 'doc', 'TOTAL_PRODUCT_QUANTITIES.csv'))
+      @parts = {}
 
-    CSV.parse(content).each_with_index do |row, i|
-      next if i == 0
-      status, sku, name, _ = *row
-      next unless sku.present?
+      @kits = Kit.all.inject({}){|hash, kit| hash[kit.index] = kit; hash }
+      @kits.values.each{|kit| kit.parts = [] }
 
-      scope = Part.where({ sku: sku, name: name })
-      @parts[name] = part = (scope.first || scope.new)
-      part.update_attributes!(status: status)
-    end
+      CSV.parse(content).each_with_index do |row, i|
+        next if i == 0
+        sku, name, _ = *row
+        next unless sku.present?
 
-    nil
-  end
+        scope = Part.where({ sku: sku, name: name })
+        @parts[name] = part = (scope.first || scope.new)
 
-  def self.import_kits
-    ks   = open("http://www.kickstarter.com/projects/fairduino/smartduino-open-system-by-former-arduinos-manufact")
-    page = ks.read
-    doc  = Nokogiri::HTML(page)
-    @kits = {}
-    
-    kits = doc.
-      css('#what-you-get').css('li .desc').
-      map{|n| n.text}.
-      select{|t| t.include?("KIT")}
+        attrs = {}
+        [ :kits, :additional, :total, :to_make, :made, :status ].each do |k|
+          attrs[k] = row[FIELD[k]]
+        end
+        p attrs
+        part.update_attributes!(attrs)
 
-    kits.each do |t| 
-      name, rest = t.split("-", 2)
+        (1..8).each do |kit_i|
+          kit = @kits[kit_i]
 
-      name = name.strip[11..-1]
-
-      kit_parts = rest.
-        split(/inc?lude:/, 2).last.strip.
-        split(/,\s/).
-        map{|pr| pr.sub(/[,.]$/, '')}
-
-      # Kit part names adjustments. Kickstarter name => Spreadsheet name.
-      ss_parts = [] # Spreadshit part name
-      kit_parts.each do |kit_part_name|
-        kit_part_name = kit_part_name.downcase.
-          sub('extension', 'replicator').
-          sub('2mm', '')
-
-        split_kit_part_name = kit_part_name.split(/\s/).reject(&:empty?).map(&:downcase)
-        
-        db_part = 
-          # First try to directly match name.
-          parts.values.detect{|pt| pt.name.downcase == kit_part_name} ||
-          # Then try to match every word from original name to spreadsheet name.
-          parts.values.detect{|pt| split_kit_part_name.all?{|ps| pt.name.downcase.include?(ps) }}
-
-        if db_part
-          ss_parts << db_part.name
-        else
-          puts("Missing part: #{kit_part_name}")
+          qty    = row[FIELD[:"kk#{kit_i}qt"]]
+          in_kit = row[FIELD[:"kk#{kit_i}"]].to_i
+          
+          kit.parts << name if in_kit > 0
+          kit.qty = qty.to_i unless qty.nil? || qty.empty?
         end
       end
 
-      scope = Kit.where({ name: name })
-      @kits[name] = kit = scope.first || scope.new
-      kit.update_attributes(parts: ss_parts)
-    end
+      @kits.values.each{|kit| kit.save }
 
-    nil
+      nil
+    end
+  end
+
+  def percent_made
+    made && to_make > 0 ? (100 * made / to_make) : 0
   end
 
   def human_status

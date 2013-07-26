@@ -1,7 +1,8 @@
 <div>
   <h1>Smartmaker Kits</h1>
 
-  <table class="kits table table-hover table-compact">
+  <p class="text-info">Hover over a part name, to get textual status.</p>
+  <table class="kits table table-compact">
     <thead>
       <tr>
         <th style="width: 15%">Name</th>
@@ -12,11 +13,15 @@
     <tbody>
       <% for kit in @kits %>
         <tr>
-          <td><%= kit.name.sub("–", "<br />").html_safe %></td>
-          <td style="background-color: <%= kit.color %>"><%= kit.human_status %></td>
+          <td>
+            <%= kit.name %><br />
+            <%= kit.pieces %> Pieces<br />
+            <%= kit.qty %> Ordered
+          </td>
+          <td class="<%= kit.color %>"><%= kit.human_status %></td>
           <td>
             <% kit.db_parts.each do |part| %>
-              <abbr title="<%= part.human_status %>" style="background-color: <%= part.color %>"><%= part.name %></abbr>
+              <abbr title="<%= part.human_status %>" class="<%= part.color %>"><%= part.name %></abbr>
             <% end %>
           </td>
         </tr>
@@ -27,7 +32,7 @@
   <h5> Legend </h5>
   <ul class="unstyled" style="width: 40%">
     <% Part::STATUSES.each do |status, desc| %>
-      <li style="background-color: <%= Part::COLORS[status] %>;"><%= desc %></li>
+      <li class="<%= Part::COLORS[status] %>"><%= desc %></li>
     <% end %>
   </ul>
 
@@ -39,14 +44,16 @@
         <th>SKU</th>
         <th>Name</th>
         <th>Status</th>
+        <th>Completed</th>
       </tr>
     </thead>
     <tbody>
       <% for part in @parts %>
-        <tr style="background-color: <%= part.color %>">
+        <tr class="<%= part.color %>">
           <td><%= part.sku %></td>
           <td><%= part.name %></td>
           <td><%= part.human_status %></td>
+          <td><%= part.made.to_i %> / <%= part.to_make.to_i %> (<%= part.percent_made %>%)</td>
         </tr>
       <% end %>
     </tbody>

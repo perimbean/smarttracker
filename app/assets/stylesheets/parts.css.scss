@@ -19,6 +19,16 @@
   }
 }
 
-.parts td {
-  font-weight: bold;
+.parts ul li {
+  padding: 2px 0;
 }
+
+.green { background-color: lighten(#008000, 30%); }
+.lime { background-color: lighten(#00FF00, 30%); }
+.blue { background-color: lighten(#0000FF, 30%); }
+.cyan { background-color: lighten(#00FFFF, 30%); }
+.yellow { background-color: lighten(#FFFF00, 30%); }
+.orange { background-color: lighten(#FFA500, 30%); }
+.red { background-color: lighten(#FF0000, 30%); }
+.grey { background-color: #aaa; }
+
